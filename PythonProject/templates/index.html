@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问禺 - 海洋数据分析平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        nav {
+            background-color: #9f36da;
+            padding: 1rem 5%;
+            box-shadow: 0 2px 4px rgb(0, 0, 0);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #ffffff;
+            font-size: 1.1rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #000000;
+        }
+
+        /* 新增注册弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 100px auto;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: #9f36da;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #9f36da;
+            outline: none;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button[type="submit"] {
+            background: #9f36da;
+            color: white;
+        }
+
+        button[type="submit"]:hover {
+            background: #7d2cb2;
+        }
+
+        .cancelBtn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .cancelBtn:hover {
+            background: #e0e0e0;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 8rem 2rem;
+            background: linear-gradient(120deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.7) 100%);
+        }
+
+        .title {
+            font-size: 3.5rem;
+            color: rgb(159, 54, 218);
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #9f36da;
+            margin-bottom: 3rem;
+        }
+
+        .cta-button {
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            background-color: #9f36da;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgb(0, 0, 0);
+        }
+
+        footer {
+            background-color: #9f36da;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: rgb(255, 255, 255);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul class="nav-links">
+            <li><a href="#">首页</a></li>
+            <li><a href="#">文献</a></li>
+            <li><a href="#">数据</a></li>
+            <li><a href="#">模型分析</a></li>
+            <li><a href="#" id="userBtn">用户</a></li> <!-- 添加了id -->
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <h1 class="title">问禺</h1>
+        <p class="subtitle">全球海洋变化多源集成数据分析平台</p>
+        <button class="cta-button">开始使用</button>
+    </div>
+
+    <!-- 新增注册弹窗 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>用户注册</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <input type="text" placeholder="用户名" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" placeholder="电子邮箱" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" placeholder="密码（至少6位）" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" placeholder="确认密码" minlength="6" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">立即注册</button>
+                    <button type="button" class="cancelBtn">稍后再说</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 在body部分添加文献内容区域 -->
+<div class="content" id="literatureContent" style="display: none;">
+    <div class="hero">
+        <h2 class="subtitle">海洋科学最新文献</h2>
+        <div class="literature-list">
+            <!-- 文献条目示例 -->
+            <div class="literature-card">
+                <a href="https://kns.cnki.net/kcms2/article/abstract?v=i_LPdPvRpB7uXsLuh3G1CVceqpR_bNBQfyJAwxO_Uo06LkrKJ8fiO6yEZm47FB00gdfI7Qpkyufa7-DILa7gh7xV7W40b5J9FPs2QYGPxebzRl5WjU3a7hGCLdl30xqv_1DX5DBRt7ngIhIFocYGvBsuXGNHW11tP_pwTBAute7qQTrdUnTfc9kY6h2eTR_2&uniplatform=NZKPT&language=CHS" target="_blank" class="paper-title">
+                    同位素内标-气相色谱质谱法测定海洋动物体中多溴联苯醚
+                </a>
+                <p class="authors">作者：唐莉;孙秀梅;金衍健;宋素平;郝青;朱剑;李铁军;郭远明</p>
+                <p class="abstract">摘要：为同时测定海洋动物体中13种多溴联苯醚（PBDEs），本研究建立了同位素内标-气相色谱-负化学源质谱方法</p>
+                <a href="https://kns.cnki.net/kcms2/article/abstract?v=i_LPdPvRpB7uXsLuh3G1CVceqpR_bNBQfyJAwxO_Uo06LkrKJ8fiO6yEZm47FB00gdfI7Qpkyufa7-DILa7gh7xV7W40b5J9FPs2QYGPxebzRl5WjU3a7hGCLdl30xqv_1DX5DBRt7ngIhIFocYGvBsuXGNHW11tP_pwTBAute7qQTrdUnTfc9kY6h2eTR_2&uniplatform=NZKPT&language=CHS" target="_blank" class="cta-button-small">查看详情</a>
+            </div>
+
+            <div class="literature-card">
+                <a href="https://kns.cnki.net/kcms2/article/abstract?v=tOz5m-jLbAUymIFByvOpOIpebpqRo9PkpE9yGACaRFnJxkNgj57KmReQtncZFzwFDtL5HFVhdIcYpQ5CuyGxi9QDhLFnj0fCsGHdPHlFsKLkQa1hzO6m__7qqxdfAecquQLCxoMFVpsf3jY3Fn-mppfC-zduQITC4B6k0mhxdHnEslDzMraLDv5kpNuMcWf0sZt0k8ycAkTTWL12eOUT6Q==&uniplatform=NZKPT" target="_blank" class="paper-title">
+                   海洋深拖电阻率层析成像用于海底水合物法CO2封存监测
+                </a>
+                <p class="authors">作者：邱宁;路川岳;潘春梧;刘彬;李鹏春;孙珍</p>
+                <p class="abstract">摘要：海洋深拖电阻率层析成像能够有效识别和定位封存区域的水合物，监测封存区域内部结构和饱和度等信息</p>
+                <a href="https://kns.cnki.net/kcms2/article/abstract?v=tOz5m-jLbAUymIFByvOpOIpebpqRo9PkpE9yGACaRFnJxkNgj57KmReQtncZFzwFDtL5HFVhdIcYpQ5CuyGxi9QDhLFnj0fCsGHdPHlFsKLkQa1hzO6m__7qqxdfAecquQLCxoMFVpsf3jY3Fn-mppfC-zduQITC4B6k0mhxdHnEslDzMraLDv5kpNuMcWf0sZt0k8ycAkTTWL12eOUT6Q==&uniplatform=NZKPT" target="_blank" class="cta-button-small">查看详情</a>
+            </div>
+            <!-- 更多文献条目... -->
+        </div>
+    </div>
+</div>
+
+<style>
+/* 新增文献页面样式 */
+.literature-list {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.literature-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.literature-card:hover {
+    transform: translateY(-3px);
+}
+
+.paper-title {
+    color: #9f36da;
+    font-size: 1.3rem;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.paper-title:hover {
+    text-decoration: underline;
+}
+
+.authors {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.abstract {
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.cta-button-small {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background-color: #9f36da;
+    color: white;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.cta-button-small:hover {
+    background-color: #7d2cb2;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+</style>
+
+<script>
+// 在现有脚本中添加页面切换逻辑
+document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = this.textContent.trim();
+
+        // 隐藏所有内容
+        document.querySelector('.hero').style.display = 'none';
+        document.getElementById('literatureContent').style.display = 'none';
+
+        // 显示对应内容
+        if(target === '文献') {
+            document.getElementById('literatureContent').style.display = 'block';
+        } else if(target === '首页') {
+            document.querySelector('.hero').style.display = 'block';
+        }
+    });
+});
+</script>
+
+    <footer>
+        <p>版权：中国地质大学（北京）“问禺”团队</p>
+        <p>数据来源：中国科学院海洋科学大数据中心</p>
+    </footer>
+
+    <script>
+        // 弹窗控制逻辑
+        const modal = document.getElementById("registerModal");
+        const userBtn = document.getElementById("userBtn");
+        const closeBtn = document.querySelector(".close");
+        const cancelBtn = document.querySelector(".cancelBtn");
+
+        // 打开弹窗
+        userBtn.onclick = () => modal.style.display = "block";
+
+        // 关闭弹窗的多种方式
+        [closeBtn, cancelBtn].forEach(btn => {
+            btn.onclick = () => {
+                modal.style.display = "none";
+                document.getElementById("registerForm").reset();
+            }
+        });
+
+        // 点击外部关闭
+        window.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = "none";
+                document.getElementById("registerForm").reset();
+            }
+        }
+
+        // 表单提交处理
+        document.getElementById("registerForm").onsubmit = (e) => {
+            e.preventDefault();
+
+            const inputs = e.target.querySelectorAll('input');
+            const [name, email, pwd, confirmPwd] = inputs;
+
+            if (pwd.value !== confirmPwd.value) {
+                alert("两次输入的密码不一致");
+                return;
+            }
+
+            modal.style.display = "none";
+            alert(`注册成功！\n用户名：${name.value}\n邮箱：${email.value}`);
+            e.target.reset();
+        }
+    </script>
+</body>
+</html>
